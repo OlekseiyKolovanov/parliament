@@ -1,29 +1,56 @@
 "use client"
 
-import { login } from "./actions"
+import { login, resendConfirmation } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { Shield, LogIn, AlertCircle } from "lucide-react"
+import { Shield, LogIn, AlertCircle, Mail } from "lucide-react"
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [needsConfirmation, setNeedsConfirmation] = useState(false)
+  const [email, setEmail] = useState("")
+  const [resendSuccess, setResendSuccess] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
     setError(null)
+    setResendSuccess(false)
+
+    const emailValue = formData.get("email") as string
+    setEmail(emailValue)
 
     const result = await login(formData)
 
     if (result?.error) {
       setError(result.error)
+      if (result.needsConfirmation) {
+        setNeedsConfirmation(true)
+      }
       setLoading(false)
     }
+  }
+
+  async function handleResendConfirmation() {
+    setResendLoading(true)
+    setResendSuccess(false)
+    setError(null)
+
+    const result = await resendConfirmation(email)
+
+    if (result?.error) {
+      setError(result.error)
+    } else if (result?.success) {
+      setResendSuccess(true)
+    }
+
+    setResendLoading(false)
   }
 
   return (
@@ -57,6 +84,15 @@ export default function LoginPage() {
               </Alert>
             )}
 
+            {resendSuccess && (
+              <Alert className="mb-4 border-green-500/50 bg-green-500/10">
+                <Mail className="h-4 w-4 text-green-500" />
+                <AlertDescription className="text-green-500">
+                  Лист з підтвердженням відправлено! Перевірте вашу пошту.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <form action={handleSubmit}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
@@ -75,6 +111,20 @@ export default function LoginPage() {
                   <Label htmlFor="password">Пароль</Label>
                   <Input id="password" name="password" type="password" required className="glass" disabled={loading} />
                 </div>
+
+                {needsConfirmation && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full bg-transparent"
+                    onClick={handleResendConfirmation}
+                    disabled={resendLoading}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    {resendLoading ? "Відправка..." : "Відправити лист підтвердження знову"}
+                  </Button>
+                )}
+
                 <Button type="submit" className="w-full shadow-lg hover-lift" size="lg" disabled={loading}>
                   {loading ? "Вхід..." : "Увійти"}
                 </Button>

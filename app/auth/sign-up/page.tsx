@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { Shield, UserPlus, AlertCircle } from "lucide-react"
+import { Shield, UserPlus, AlertCircle, Mail } from "lucide-react"
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
@@ -38,7 +39,45 @@ export default function SignUpPage() {
     if (result?.error) {
       setError(result.error)
       setLoading(false)
+    } else {
+      setSuccess(true)
+      setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center p-6 gradient-secondary">
+        <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(white,transparent_85%)]" />
+
+        <div className="w-full max-w-md relative z-10 animate-fade-in">
+          <Card className="glass shadow-2xl border-border/50">
+            <CardHeader className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mx-auto mb-4">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Перевірте вашу пошту</CardTitle>
+              <CardDescription className="text-base">
+                Ми відправили лист з підтвердженням на вашу електронну адресу
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert className="border-primary/50 bg-primary/10">
+                <AlertCircle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-sm">
+                  Будь ласка, перейдіть за посиланням у листі для підтвердження вашого акаунту перед входом.
+                </AlertDescription>
+              </Alert>
+              <div className="text-center">
+                <Link href="/auth/login">
+                  <Button className="w-full shadow-lg hover-lift">Перейти до входу</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
